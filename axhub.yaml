@@ -1,0 +1,14 @@
+version: axhub/v1
+name: printboard
+metadata:
+  name: PrintBoard
+build:
+  framework: vite
+  install: npm ci
+  build: npm run build
+  static_output_dir: dist
+  deploy_method: static
+env:
+  required:
+    - name: VITE_SUPABASE_URL
+    - name: VITE_SUPABASE_PUBLISHABLE_KEY
