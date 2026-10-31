@@ -463,3 +463,16 @@ svg { display: block; width: 20px; height: 20px; }
 .log-list time { color: var(--muted); font-variant-numeric: tabular-nums; }
 .log-list small { display: block; margin-top: 1px; color: var(--muted); font-size: 10px; }
 @media (max-width: 700px) { .next-up { margin: -10px 0 20px; padding: 10px 12px; } }
+
+/* 관리자 상태 필터 */
+.admin-filters { display: flex; gap: 6px; margin: 12px 0 4px; overflow-x: auto; scrollbar-width: none; }
+.admin-filters::-webkit-scrollbar { display: none; }
+.filter-chip { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; min-height: 32px; padding: 0 12px; color: #4e595c; background: #fff; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; font-size: 12px; font-weight: 600; }
+.filter-chip span { min-width: 18px; padding: 0 5px; color: #6c7679; background: var(--work); border-radius: 9px; font-size: 10px; text-align: center; }
+.filter-chip:hover { border-color: #b9c2c3; }
+.filter-chip.active { color: #fff; background: var(--charcoal); border-color: var(--charcoal); }
+.filter-chip.active span { color: var(--charcoal); background: #fff; }
+.filter-chip.attention:not(.active) span { color: #fff; background: #e08a1e; }
+.filter-chip:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.request-age { margin-left: 2px; color: #8f999b; font-size: 10px; }
+.request-age.waiting { color: #9a5b06; font-weight: 600; }
