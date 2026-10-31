@@ -6,12 +6,68 @@ import { Icon } from '../components/Icon'
 import { PageTitle } from '../components/PageTitle'
 import { PrinterBadge } from '../components/StatusBadge'
 
-function remaining(endsAt: string | null) {
+function duration(minutes: number) {
+  if (minutes < 60) return `약 ${minutes}분`
+  const rest = minutes % 60
+  if (rest === 0) return `약 ${Math.floor(minutes / 60)}시간`
+  return `약 ${Math.floor(minutes / 60)}시간 ${rest}분`
+}
+
+function minutesLeft(endsAt: string | null, now: number) {
   if (!endsAt) return null
-  const minutes = Math.ceil((new Date(endsAt).getTime() - Date.now()) / 60_000)
-  if (minutes <= 0) return '완료 예정 시간이 지났어요'
-  if (minutes < 60) return `약 ${minutes}분 남음`
-  return `약 ${Math.floor(minutes / 60)}시간 ${minutes % 60}분 남음`
+  return Math.ceil((new Date(endsAt).getTime() - now) / 60_000)
+}
+
+// 출력 중인데 예정 시각이 지났으면 실제로는 끝났을 가능성이 높다
+function isOverdue(printer: Printer, now: number) {
+  const left = minutesLeft(printer.ends_at, now)
+  return printer.status === 'printing' && left !== null && left <= 0
+}
+
+function clockTime(iso: string) {
+  return new Date(iso).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+}
+
+function shortName(printer: Printer) {
+  return printer.name.replace('프린터', '').trim() || String(printer.id)
+}
+
+function NextUp({ printers, now }: { printers: Printer[]; now: number }) {
+  if (printers.length === 0) return null
+  const idle = printers.filter((printer) => printer.status === 'idle')
+  const overdue = printers.filter((printer) => isOverdue(printer, now))
+  const upcoming = printers
+    .filter((printer) => printer.status === 'printing' && !isOverdue(printer, now) && printer.ends_at)
+    .sort((a, b) => new Date(a.ends_at ?? 0).getTime() - new Date(b.ends_at ?? 0).getTime())
+  const soonest = upcoming[0]
+
+  let tone = 'next-wait'
+  let label = '지금 쓸 수 있는 프린터가 없어요'
+  let detail = '점검이 끝나거나 출력이 끝나면 여기에 표시돼요.'
+  if (idle.length > 0) {
+    tone = 'next-ready'
+    label = `지금 바로 쓸 수 있어요 · ${idle.length}대`
+    detail = `프린터 ${idle.map(shortName).join(', ')}`
+  } else if (soonest) {
+    const left = minutesLeft(soonest.ends_at, now) ?? 0
+    tone = 'next-soon'
+    label = `다음으로 비는 프린터 · ${soonest.name}`
+    detail = `${duration(left)} 뒤 (${clockTime(soonest.ends_at ?? '')} 예정, 입력된 시간 기준)`
+  } else if (overdue.length > 0) {
+    tone = 'next-soon'
+    label = '끝났을 수 있는 프린터가 있어요'
+    detail = '아래 주황색 카드는 예정 시간이 지났어요. 가서 확인해 보세요.'
+  }
+
+  return (
+    <div className={`next-up ${tone}`} role="status">
+      <span className="next-up-icon"><Icon name={tone === 'next-ready' ? 'check' : 'clock'} /></span>
+      <div><b>{label}</b><span>{detail}</span></div>
+      {overdue.length > 0 && (idle.length > 0 || soonest) && (
+        <small className="next-up-extra"><Icon name="alert" />{overdue.map((printer) => printer.name).join(', ')} · 예정 시간이 지나 끝났을 수 있어요</small>
+      )}
+    </div>
+  )
 }
 
 export function BoardPage() {
@@ -20,6 +76,13 @@ export function BoardPage() {
   const [error, setError] = useState('')
   const [realtimeState, setRealtimeState] = useState<'demo' | 'connecting' | 'connected' | 'error'>('connecting')
   const [refreshKey, setRefreshKey] = useState(0)
+  const [now, setNow] = useState(() => Date.now())
+
+  // 남은 시간과 '시간 지남' 표시가 저절로 갱신되도록 30초마다 다시 계산한다
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -57,6 +120,8 @@ export function BoardPage() {
         </div>
       </div>
 
+      {!loading && !error && <NextUp printers={printers} now={now} />}
+
       {error && <div className="notice notice-error" role="alert"><Icon name="alert" /><span>{error}</span><button className="button button-outline notice-action" type="button" onClick={() => setRefreshKey((key) => key + 1)}>다시 시도</button></div>}
       {loading ? <div className="loading-panel"><span className="spinner" />장비 상태를 불러오는 중…</div> : (
         <div className="section-block">
@@ -66,21 +131,26 @@ export function BoardPage() {
           </div>
           {realtimeState === 'error' && <div className="notice notice-warning" role="status"><Icon name="alert" /><span>현재 표시된 정보가 최신이 아닐 수 있어요. 보드 데이터를 다시 불러오려면 눌러 주세요.</span><button className="button button-outline notice-action" type="button" onClick={() => setRefreshKey((key) => key + 1)}>새로고침</button></div>}
           <div className="printer-grid">
-            {printers.map((printer, index) => (
-              <Link className={`printer-card card-${printer.status}`} to={`/p/${printer.id}`} key={printer.id} data-tour={index === 0 ? 'printer-card' : undefined}>
+            {printers.map((printer, index) => {
+              const overdue = isOverdue(printer, now)
+              const left = minutesLeft(printer.ends_at, now)
+              return (
+              <Link className={`printer-card card-${printer.status}${overdue ? ' card-overdue' : ''}`} to={`/p/${printer.id}`} key={printer.id} data-tour={index === 0 ? 'printer-card' : undefined}>
                 <div className="printer-card-top">
                   <span className="printer-illustration"><Icon name="printer" /></span>
-                  <PrinterBadge status={printer.status} />
+                  {overdue ? <span className="status-badge printer-overdue"><span className="badge-dot" />확인 필요</span> : <PrinterBadge status={printer.status} />}
                 </div>
                 <div className="printer-card-title"><span className="device-number">DEVICE {String(printer.id).padStart(2, '0')}</span><h3>{printer.name}</h3></div>
                 <div className="printer-card-detail">
-                  {printer.status === 'printing' ? <><span><Icon name="clock" />{remaining(printer.ends_at)}</span><small>출력자 · {printer.user_name || '이름 미입력'}</small></> : null}
+                  {printer.status === 'printing' && overdue ? <><span className="overdue-note"><Icon name="alert" />{clockTime(printer.ends_at ?? '')} 완료 예정 · 끝났을 수 있어요</span><small>현장에서 확인 후 QR로 비워 주세요</small></> : null}
+                  {printer.status === 'printing' && !overdue ? <><span><Icon name="clock" />{left === null ? '종료 시간 미입력' : `${duration(left)} 남음`}</span><small>출력자 · {printer.user_name || '이름 미입력'}</small></> : null}
                   {printer.status === 'broken' ? <span className="broken-note"><Icon name="alert" />{printer.note || '점검 메모가 없습니다.'}</span> : null}
                   {printer.status === 'idle' ? <span className="idle-note"><Icon name="check" />바로 사용 가능</span> : null}
                 </div>
                 <span className="card-link">상태 확인 <Icon name="arrow" /></span>
               </Link>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}

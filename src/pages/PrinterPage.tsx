@@ -3,8 +3,17 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { PageTitle } from '../components/PageTitle'
 import { PrinterBadge } from '../components/StatusBadge'
-import { getPrinters, isDemoMode, updatePrinterStatus } from '../lib/data'
+import { getPrinters, getStatusLogs, isDemoMode, type StatusLog, updatePrinterStatus } from '../lib/data'
 import type { Printer, PrinterStatus } from '../types'
+
+const logLabels: Record<PrinterStatus, string> = { idle: '비어 있음으로 변경', printing: '출력 시작', broken: '고장 신고' }
+
+function logTime(iso: string) {
+  const date = new Date(iso)
+  const today = new Date().toDateString() === date.toDateString()
+  if (today) return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+  return date.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+}
 
 const choices: { value: PrinterStatus; label: string; detail: string }[] = [
   { value: 'idle', label: '비어 있음', detail: '출력할 수 있어요' },
@@ -25,6 +34,18 @@ export function PrinterPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [logs, setLogs] = useState<StatusLog[]>([])
+  const [logsState, setLogsState] = useState<'loading' | 'ready' | 'error'>('loading')
+
+  useEffect(() => {
+    let active = true
+    if (!Number.isInteger(printerId) || printerId < 1 || printerId > 8) return
+    setLogsState('loading')
+    getStatusLogs(printerId)
+      .then((items) => { if (active) { setLogs(items); setLogsState('ready') } })
+      .catch(() => { if (active) setLogsState('error') })
+    return () => { active = false }
+  }, [printerId, saved])
 
   useEffect(() => {
     let active = true
@@ -88,6 +109,23 @@ export function PrinterPage() {
             {printer.status === 'broken' && <p className="device-meta">점검 메모<br /><strong>{printer.note || '등록된 메모가 없습니다.'}</strong></p>}
             <div className="device-panel-divider" />
             <p className="device-meta">최근 갱신<br /><strong>{new Date(printer.updated_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</strong></p>
+            <div className="device-panel-divider" />
+            <div className="log-block">
+              <span className="section-kicker">RECENT CHANGES</span>
+              {logsState === 'loading' && <p className="log-empty">기록을 불러오는 중…</p>}
+              {logsState === 'error' && <p className="log-empty">기록을 불러오지 못했어요.</p>}
+              {logsState === 'ready' && logs.length === 0 && <p className="log-empty">{isDemoMode() ? '데모 화면에는 기록이 없어요.' : '아직 변경 기록이 없어요.'}</p>}
+              {logsState === 'ready' && logs.length > 0 && (
+                <ol className="log-list">
+                  {logs.map((log) => (
+                    <li key={log.id} className={`log-${log.status}`}>
+                      <time dateTime={log.created_at}>{logTime(log.created_at)}</time>
+                      <span>{logLabels[log.status]}{log.note ? <small>{log.note}</small> : null}</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
           </div>
         </aside>
 

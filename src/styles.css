@@ -432,3 +432,34 @@ svg { display: block; width: 20px; height: 20px; }
 .tour-launcher:focus-visible, .tour-skip:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 @media print { .tour-launcher, .tour-root { display: none !important; } }
 @media (prefers-reduced-motion: reduce) { .tour-spotlight, .tour-dots span { transition: none; } }
+
+/* 시간 지난 출력 */
+.printer-card.card-overdue::before { background: #e08a1e; }
+.printer-overdue { color: #9a5b06; background: #fff1dc; }
+.overdue-note { color: #9a5b06; font-weight: 600; }
+
+/* 다음에 비는 프린터 */
+.next-up { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: -16px 0 26px; padding: 12px 16px; background: #fff; border: 1px solid var(--line); border-left: 4px solid var(--green); border-radius: var(--radius); }
+.next-up > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.next-up b { color: var(--ink); font-size: 13px; }
+.next-up > div span { color: #5d686a; font-size: 12px; }
+.next-up-icon { display: grid; place-items: center; flex: 0 0 auto; width: 32px; height: 32px; color: var(--green-dark); background: var(--green-pale); border-radius: 50%; }
+.next-up-icon svg { width: 17px; height: 17px; }
+.next-up.next-soon { border-left-color: var(--blue); }
+.next-up.next-soon .next-up-icon { color: var(--blue); background: #e7f1fc; }
+.next-up.next-wait { border-left-color: var(--red); }
+.next-up.next-wait .next-up-icon { color: var(--red); background: #fdebec; }
+.next-up-extra { display: flex; align-items: center; gap: 6px; flex-basis: 100%; padding-top: 8px; color: #9a5b06; border-top: 1px dashed var(--line); font-size: 11px; }
+.next-up-extra svg { width: 14px; height: 14px; flex: 0 0 auto; }
+
+/* 프린터별 최근 기록 */
+.log-block .section-kicker { display: block; margin-bottom: 8px; }
+.log-empty { margin: 0; color: var(--muted); font-size: 11px; }
+.log-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.log-list li { display: grid; grid-template-columns: 62px 1fr; gap: 8px; align-items: baseline; padding-left: 10px; border-left: 2px solid var(--line); font-size: 11px; color: #394244; }
+.log-list li.log-idle { border-left-color: var(--green); }
+.log-list li.log-printing { border-left-color: var(--blue); }
+.log-list li.log-broken { border-left-color: var(--red); }
+.log-list time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.log-list small { display: block; margin-top: 1px; color: var(--muted); font-size: 10px; }
+@media (max-width: 700px) { .next-up { margin: -10px 0 20px; padding: 10px 12px; } }

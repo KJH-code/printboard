@@ -61,6 +61,25 @@ export function subscribePrinters(
   }
 }
 
+export type StatusLog = {
+  id: number
+  status: PrinterStatus
+  note: string | null
+  created_at: string
+}
+
+export async function getStatusLogs(printerId: number, limit = 5): Promise<StatusLog[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from('status_logs')
+    .select('id,status,note,created_at')
+    .eq('printer_id', printerId)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) throw error
+  return (data ?? []) as StatusLog[]
+}
+
 const edgeErrorMessages: Record<string, string> = {
   only_3mf_and_stl: '.3mf 또는 .stl 파일만 올릴 수 있습니다.',
   too_many_uploads: '파일 업로드 요청이 많습니다. 잠시 뒤 다시 시도해 주세요.',
