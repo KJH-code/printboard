@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getPrinters, subscribePrinters } from '../lib/data'
 import type { Printer } from '../types'
@@ -77,6 +77,22 @@ export function BoardPage() {
   const [realtimeState, setRealtimeState] = useState<'demo' | 'connecting' | 'connected' | 'error'>('connecting')
   const [refreshKey, setRefreshKey] = useState(0)
   const [now, setNow] = useState(() => Date.now())
+  const [flashing, setFlashing] = useState<number[]>([])
+  const seen = useRef<Map<number, string> | null>(null)
+
+  // 실시간으로 바뀐 프린터 카드를 잠깐 강조해서 어디가 바뀌었는지 보이게 한다
+  useEffect(() => {
+    if (printers.length === 0) return
+    const next = new Map(printers.map((printer) => [printer.id, `${printer.status}|${printer.updated_at}`]))
+    const before = seen.current
+    seen.current = next
+    if (!before) return
+    const changed = printers.filter((printer) => before.has(printer.id) && before.get(printer.id) !== next.get(printer.id)).map((printer) => printer.id)
+    if (changed.length === 0) return
+    setFlashing((current) => [...current, ...changed])
+    const timer = window.setTimeout(() => setFlashing((current) => current.filter((id) => !changed.includes(id))), 1800)
+    return () => window.clearTimeout(timer)
+  }, [printers])
 
   // 남은 시간과 '시간 지남' 표시가 저절로 갱신되도록 30초마다 다시 계산한다
   useEffect(() => {
@@ -135,7 +151,7 @@ export function BoardPage() {
               const overdue = isOverdue(printer, now)
               const left = minutesLeft(printer.ends_at, now)
               return (
-              <Link className={`printer-card card-${printer.status}${overdue ? ' card-overdue' : ''}`} to={`/p/${printer.id}`} key={printer.id} data-tour={index === 0 ? 'printer-card' : undefined}>
+              <Link className={`printer-card card-${printer.status}${overdue ? ' card-overdue' : ''}${flashing.includes(printer.id) ? ' card-flash' : ''}`} to={`/p/${printer.id}`} key={printer.id} data-tour={index === 0 ? 'printer-card' : undefined}>
                 <div className="printer-card-top">
                   <span className="printer-illustration"><Icon name="printer" /></span>
                   {overdue ? <span className="status-badge printer-overdue"><span className="badge-dot" />확인 필요</span> : <PrinterBadge status={printer.status} />}
