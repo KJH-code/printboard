@@ -1,0 +1,25 @@
+project_id = "printboard"
+
+[functions.request-upload]
+enabled = true
+verify_jwt = false
+import_map = "./functions/request-upload/deno.json"
+entrypoint = "./functions/request-upload/index.ts"
+
+[functions.request-submit]
+enabled = true
+verify_jwt = false
+import_map = "./functions/request-submit/deno.json"
+entrypoint = "./functions/request-submit/index.ts"
+
+[functions.request-status]
+enabled = true
+verify_jwt = false
+import_map = "./functions/request-status/deno.json"
+entrypoint = "./functions/request-status/index.ts"
+
+[functions.admin-file-link]
+enabled = true
+verify_jwt = false
+import_map = "./functions/admin-file-link/deno.json"
+entrypoint = "./functions/admin-file-link/index.ts"

@@ -11,20 +11,20 @@ export function RequestPage() {
   const [file, setFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [submitted, setSubmitted] = useState(false)
+  const [trackingCode, setTrackingCode] = useState('')
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
-    setSubmitted(false)
+    setTrackingCode('')
     if (!file) {
       setError('출력 파일을 선택해 주세요.')
       return
     }
     setSaving(true)
     try {
-      await submitPrintRequest({ requesterName: name, memberNo, file, note })
-      setSubmitted(true)
+      const code = await submitPrintRequest({ requesterName: name, memberNo, file, note })
+      setTrackingCode(code)
       setName('')
       setMemberNo('')
       setNote('')
@@ -59,9 +59,10 @@ export function RequestPage() {
           </label>
           <label className="field"><span>요청 메모 <small>(선택)</small></span><textarea maxLength={300} rows={4} value={note} onChange={(event) => setNote(event.target.value)} placeholder="재료, 일정 등 담당자에게 남길 내용" /></label>
           <div className="privacy-note"><Icon name="admin" /><p><strong>개인정보 안내</strong><br />이름과 학번·교번은 접수 처리에 사용됩니다. 첨부 파일은 관리자용 링크로 제공되며, 링크가 공유되면 열릴 수 있습니다.</p></div>
-          {error && <div className="notice notice-error" role="alert"><Icon name="alert" />{error}</div>}
-          {submitted && <div className="notice notice-success" role="status"><Icon name="check" />접수했어요. 담당자가 확인할 예정입니다.</div>}
-          <div className="form-actions"><span className="form-hint">파일을 올린 뒤에도 출력 가능 여부는 현장 상황에 따라 달라질 수 있어요.</span><button className="button button-green button-large" type="submit" disabled={saving}>{saving ? '접수 중…' : '출력 접수하기'}<Icon name="arrow" /></button></div>
+          <div className="reservation-note"><strong>접수는 프린터 예약이 아니에요.</strong> 현장 대기 순서와 장비 상황을 확인한 뒤 담당자가 배정합니다.</div>
+          {error && <div className="notice notice-error" role="alert"><Icon name="alert" /><span>{error}</span></div>}
+          {trackingCode && <div className="notice notice-success tracking-success" role="status"><Icon name="check" /><div><strong>신청이 접수됐어요. 아래 접수번호를 저장해 주세요.</strong><code>{trackingCode}</code><span>접수는 예약이나 출력 확정이 아니며, 현장 확인 후 담당자가 처리합니다.</span><Link to="/track">접수 진행 상태 조회하기 <Icon name="arrow" /></Link></div></div>}
+          <div className="form-actions"><span className="form-hint">파일을 올린 뒤에도 출력 가능 여부는 현장 상황에 따라 달라질 수 있어요.</span><button className="button button-green button-large" type="submit" disabled={saving} aria-busy={saving}>{saving ? <><span className="spinner button-spinner" />접수 중…</> : <>출력 접수하기<Icon name="arrow" /></>}</button></div>
         </form>
         <aside className="request-aside">
           <div className="aside-card panel"><span className="aside-number">01</span><h3>파일을 준비해요</h3><p>슬라이싱한 .3mf 또는 .stl 파일을 올려 주세요.</p></div>

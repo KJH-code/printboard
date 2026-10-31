@@ -23,6 +23,7 @@ export function AdminPage() {
   const [printers, setPrinters] = useState<Printer[]>([])
   const [loading, setLoading] = useState(false)
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  const [openingFile, setOpeningFile] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
 
@@ -68,6 +69,19 @@ export function AdminPage() {
     }
   }
 
+  async function handleOpenFile(path: string) {
+    setError('')
+    setOpeningFile(path)
+    try {
+      const signedUrl = await getRequestFileUrl(path, password)
+      window.location.assign(signedUrl)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '파일 링크를 만들지 못했습니다. 다시 시도해 주세요.')
+    } finally {
+      setOpeningFile(null)
+    }
+  }
+
   function logout() {
     setAuthenticated(false)
     setRequests([])
@@ -108,13 +122,12 @@ export function AdminPage() {
           ) : (
             <div className="request-list">
               {requests.map((request) => {
-                const fileUrl = getRequestFileUrl(request.file_path)
                 return (
                   <article className="request-row panel" key={request.id}>
                     <div className="request-row-main">
                       <div className="request-row-heading"><span className="request-date">{new Date(request.created_at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span><RequestBadge status={request.status} /></div>
                       <div className="request-person"><strong>{request.requester_name}</strong><span>학번·교번 {request.member_no}</span></div>
-                      <a className="file-link" href={fileUrl ?? undefined} target="_blank" rel="noreferrer" aria-disabled={!fileUrl} onClick={(event) => { if (!fileUrl) event.preventDefault() }}><Icon name="file" />{request.file_path.split('/').pop()}<Icon name="external" /></a>
+                      <a className="file-link" href="#" aria-busy={openingFile === request.file_path} onClick={(event) => { event.preventDefault(); void handleOpenFile(request.file_path) }}><Icon name="file" />{openingFile === request.file_path ? '임시 링크 만드는 중…' : request.file_path.split('/').pop()}<Icon name="external" /></a>
                       {request.note && <p className="request-note">{request.note}</p>}
                     </div>
                     <div className="request-row-actions">

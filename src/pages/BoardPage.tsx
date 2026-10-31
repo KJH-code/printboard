@@ -19,16 +19,19 @@ export function BoardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [realtimeState, setRealtimeState] = useState<'demo' | 'connecting' | 'connected' | 'error'>('connecting')
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let active = true
+    setLoading(true)
+    setError('')
     getPrinters()
       .then((items) => { if (active) setPrinters(items) })
-      .catch(() => { if (active) setError('프린터 정보를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.') })
+      .catch(() => { if (active) setError('프린터 정보를 불러오지 못했습니다. 연결을 확인하고 다시 시도해 주세요.') })
       .finally(() => { if (active) setLoading(false) })
     const unsubscribe = subscribePrinters(setPrinters, setRealtimeState)
     return () => { active = false; unsubscribe() }
-  }, [])
+  }, [refreshKey])
 
   const counts = useMemo(() => printers.reduce((acc, printer) => {
     acc[printer.status] += 1
@@ -54,13 +57,14 @@ export function BoardPage() {
         </div>
       </div>
 
-      {error && <div className="notice notice-error" role="alert"><Icon name="alert" />{error}</div>}
+      {error && <div className="notice notice-error" role="alert"><Icon name="alert" /><span>{error}</span><button className="button button-outline notice-action" type="button" onClick={() => setRefreshKey((key) => key + 1)}>다시 시도</button></div>}
       {loading ? <div className="loading-panel"><span className="spinner" />장비 상태를 불러오는 중…</div> : (
         <div className="section-block">
           <div className="section-heading">
             <div><span className="section-kicker">DEVICE OVERVIEW</span><h2>프린터 8대</h2></div>
-            <span className={`updated-indicator realtime-${realtimeState}`}><span className="pulse-dot" />{realtimeState === 'demo' ? '브라우저 내 샘플 상태' : realtimeState === 'connected' ? '실시간 구독 중' : realtimeState === 'error' ? '실시간 연결 확인 필요' : '실시간 연결 중'}</span>
+            <span className={`updated-indicator realtime-${realtimeState}`} role="status"><span className="pulse-dot" />{realtimeState === 'demo' ? '브라우저 내 샘플 상태' : realtimeState === 'connected' ? '실시간 구독 중' : realtimeState === 'error' ? '실시간 연결 끊김' : '실시간 연결 중'}</span>
           </div>
+          {realtimeState === 'error' && <div className="notice notice-warning" role="status"><Icon name="alert" /><span>현재 표시된 정보가 최신이 아닐 수 있어요. 보드 데이터를 다시 불러오려면 눌러 주세요.</span><button className="button button-outline notice-action" type="button" onClick={() => setRefreshKey((key) => key + 1)}>새로고침</button></div>}
           <div className="printer-grid">
             {printers.map((printer) => (
               <Link className={`printer-card card-${printer.status}`} to={`/p/${printer.id}`} key={printer.id}>

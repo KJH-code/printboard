@@ -6,6 +6,7 @@ import { demoMode } from '../lib/config'
 const links = [
   { to: '/', label: '상태 보드', icon: 'home' as const, end: true },
   { to: '/request', label: '출력 접수', icon: 'request' as const },
+  { to: '/track', label: '접수 조회', icon: 'clock' as const },
   { to: '/admin', label: '관리자', icon: 'admin' as const },
   { to: '/qr', label: 'QR 시트', icon: 'qr' as const },
 ]
@@ -27,7 +28,7 @@ export function Shell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="topbar-right">
-          {demoMode ? <span className="connection-pill demo"><span className="connection-dot" />데모 모드</span> : <span className="connection-pill live"><span className="connection-dot" />Supabase 키 설정됨</span>}
+          {demoMode && <span className="connection-pill demo"><span className="connection-dot" />데모 모드</span>}
         </div>
       </header>
       {demoMode && (
