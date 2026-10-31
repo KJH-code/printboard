@@ -47,7 +47,7 @@ export function BoardPage() {
         action={<Link className="button button-green" to="/qr"><Icon name="qr" /> QR 시트 보기</Link>}
       />
 
-      <div className="summary-strip" aria-label="프린터 상태 요약">
+      <div className="summary-strip" data-tour="summary" aria-label="프린터 상태 요약">
         <div className="summary-label"><span className="summary-icon"><Icon name="printer" /></span><span><b>전체 장비</b><small>MAKERSPACE · P1S</small></span></div>
         <div className="summary-stats">
           <div className="summary-stat"><strong>{printers.length}</strong><span>전체</span></div>
@@ -62,12 +62,12 @@ export function BoardPage() {
         <div className="section-block">
           <div className="section-heading">
             <div><span className="section-kicker">DEVICE OVERVIEW</span><h2>프린터 8대</h2></div>
-            <span className={`updated-indicator realtime-${realtimeState}`} role="status"><span className="pulse-dot" />{realtimeState === 'demo' ? '브라우저 내 샘플 상태' : realtimeState === 'connected' ? '실시간 구독 중' : realtimeState === 'error' ? '실시간 연결 끊김' : '실시간 연결 중'}</span>
+            <span data-tour="realtime" className={`updated-indicator realtime-${realtimeState}`} role="status"><span className="pulse-dot" />{realtimeState === 'demo' ? '브라우저 내 샘플 상태' : realtimeState === 'connected' ? '실시간 구독 중' : realtimeState === 'error' ? '실시간 연결 끊김' : '실시간 연결 중'}</span>
           </div>
           {realtimeState === 'error' && <div className="notice notice-warning" role="status"><Icon name="alert" /><span>현재 표시된 정보가 최신이 아닐 수 있어요. 보드 데이터를 다시 불러오려면 눌러 주세요.</span><button className="button button-outline notice-action" type="button" onClick={() => setRefreshKey((key) => key + 1)}>새로고침</button></div>}
           <div className="printer-grid">
-            {printers.map((printer) => (
-              <Link className={`printer-card card-${printer.status}`} to={`/p/${printer.id}`} key={printer.id}>
+            {printers.map((printer, index) => (
+              <Link className={`printer-card card-${printer.status}`} to={`/p/${printer.id}`} key={printer.id} data-tour={index === 0 ? 'printer-card' : undefined}>
                 <div className="printer-card-top">
                   <span className="printer-illustration"><Icon name="printer" /></span>
                   <PrinterBadge status={printer.status} />

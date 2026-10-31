@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { Icon } from './Icon'
 import { demoMode } from '../lib/config'
+import { Tour } from './Tour'
 
 const links = [
   { to: '/', label: '상태 보드', icon: 'home' as const, end: true },
@@ -21,7 +22,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </NavLink>
         <nav className="main-nav" aria-label="주요 메뉴">
           {links.map((link) => (
-            <NavLink key={link.to} to={link.to} end={link.end} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+            <NavLink key={link.to} to={link.to} end={link.end} data-tour={`nav-${link.to.slice(1) || 'home'}`} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
               <Icon name={link.icon} />
               <span>{link.label}</span>
             </NavLink>
@@ -38,6 +39,7 @@ export function Shell({ children }: { children: ReactNode }) {
         </div>
       )}
       <main className="workspace">{children}</main>
+      <Tour />
       <footer className="site-footer"><span>PrintBoard · 학교 메이커실</span><span>프린터 상태는 현장 사용자가 직접 갱신합니다.</span></footer>
     </div>
   )
