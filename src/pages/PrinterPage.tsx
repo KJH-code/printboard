@@ -15,6 +15,17 @@ function logTime(iso: string) {
   return date.toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
+// 출력 시작 기록의 메모에는 이름이 들어 있어서, 완료 예정 시각만 꺼내 보여 준다
+function logDetail(log: StatusLog) {
+  if (!log.note) return null
+  if (log.status === 'broken') return log.note
+  if (log.status === 'printing') {
+    const match = log.note.match(/(\d{1,2}:\d{2})/)
+    if (match) return `${match[1]} 완료 예정`
+  }
+  return null
+}
+
 const choices: { value: PrinterStatus; label: string; detail: string }[] = [
   { value: 'idle', label: '비어 있음', detail: '출력할 수 있어요' },
   { value: 'printing', label: '출력 시작', detail: '예상 시간을 남겨요' },
@@ -120,7 +131,7 @@ export function PrinterPage() {
                   {logs.map((log) => (
                     <li key={log.id} className={`log-${log.status}`}>
                       <time dateTime={log.created_at}>{logTime(log.created_at)}</time>
-                      <span>{logLabels[log.status]}{log.note ? <small>{log.note}</small> : null}</span>
+                      <span>{logLabels[log.status]}{logDetail(log) ? <small>{logDetail(log)}</small> : null}</span>
                     </li>
                   ))}
                 </ol>
