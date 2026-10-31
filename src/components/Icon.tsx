@@ -4,7 +4,7 @@ type IconName = 'home' | 'printer' | 'request' | 'admin' | 'qr' | 'arrow' | 'che
 
 const paths: Record<IconName, string> = {
   home: 'M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-5v-6h-5v6h-5A1.5 1.5 0 0 1 3 19.5z',
-  printer: 'M7 3h10v5H7zM5 8h14a2 2 0 0 1 2 2v8h-4v3H7v-3H3v-8a2 2 0 0 1 2-2Zm3 8v3h8v-3zm10-5h.01',
+  printer: 'M4 3h16v18H4zM4 7.5h16M10 7.5h4v2l-2 2.2-2-2.2zM7 18h10M9.5 18v-3.5h5V18',
   request: 'M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm3 5h6M9 12h6m-6 4h4',
   admin: 'M12 3 20 6v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6zm-3 9 2 2 4-4',
   qr: 'M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h3v3h-3zm4 0h3v7h-7v-3',
