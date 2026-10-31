@@ -476,3 +476,12 @@ svg { display: block; width: 20px; height: 20px; }
 .filter-chip:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 .request-age { margin-left: 2px; color: #8f999b; font-size: 10px; }
 .request-age.waiting { color: #9a5b06; font-weight: 600; }
+
+/* 보기 전용 (현장 QR 필요) */
+.view-only-body { display: flex; align-items: flex-start; gap: 14px; margin: 14px 0 18px; padding: 16px; background: #f6f8f8; border: 1px dashed #cdd4d5; border-radius: 9px; }
+.view-only-body strong { display: block; color: var(--ink); font-size: 14px; }
+.view-only-body p { margin: 6px 0 0; color: #5d686a; font-size: 12px; line-height: 1.6; word-break: keep-all; }
+.view-only-icon { display: grid; place-items: center; flex: 0 0 auto; width: 40px; height: 40px; color: var(--green-dark); background: var(--green-pale); border-radius: 10px; }
+.view-only-icon svg { width: 22px; height: 22px; }
+.qr-actions { display: flex; gap: 8px; }
+@media print { .qr-actions { display: none !important; } }

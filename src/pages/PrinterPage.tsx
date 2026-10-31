@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { PageTitle } from '../components/PageTitle'
 import { PrinterBadge } from '../components/StatusBadge'
@@ -36,6 +36,10 @@ export function PrinterPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const printerId = Number(id)
+  const [searchParams] = useSearchParams()
+  const token = searchParams.get('k')
+  // 프린터 앞 QR에만 들어 있는 토큰이 있어야 바꿀 수 있다. 현황판에서 눌러 들어오면 보기 전용.
+  const canEdit = isDemoMode() || Boolean(token)
   const [printer, setPrinter] = useState<Printer | null>(null)
   const [selected, setSelected] = useState<PrinterStatus>('idle')
   const [name, setName] = useState('')
@@ -87,6 +91,7 @@ export function PrinterPage() {
     try {
       await updatePrinterStatus({
         printerId,
+        token,
         status: selected,
         userName: selected === 'printing' ? name.trim() : null,
         endsAt,
@@ -140,6 +145,7 @@ export function PrinterPage() {
           </div>
         </aside>
 
+        {canEdit ? (
         <form className="status-form panel" onSubmit={handleSubmit}>
           <div className="panel-heading"><div><span className="section-kicker">UPDATE DEVICE</span><h2>상태 변경</h2></div><span className="quick-tag">현장 QR</span></div>
           <div className="status-choice-grid" role="radiogroup" aria-label="새 프린터 상태">
@@ -163,6 +169,19 @@ export function PrinterPage() {
           {saved && <div className="notice notice-success" role="status"><Icon name="check" />{isDemoMode() ? '데모 화면에서만 변경했습니다. Supabase에는 저장되지 않았습니다.' : '저장했어요. 상태 보드로 이동합니다.'}</div>}
           <div className="form-actions"><span className="form-hint">상태 변경은 기록으로 남습니다.</span><button className="button button-green button-large" type="submit" disabled={saving}>{saving ? '저장 중…' : '상태 저장'}<Icon name="arrow" /></button></div>
         </form>
+        ) : (
+          <div className="status-form panel view-only">
+            <div className="panel-heading"><div><span className="section-kicker">VIEW ONLY</span><h2>보기 전용</h2></div><span className="quick-tag">현장 QR 필요</span></div>
+            <div className="view-only-body">
+              <span className="view-only-icon"><Icon name="qr" /></span>
+              <div>
+                <strong>상태는 프린터 앞 QR을 찍어야 바꿀 수 있어요</strong>
+                <p>메이커실 밖에서 장난으로 상태를 바꾸지 못하도록, 상태 변경은 현장에 붙은 QR로만 열려요. 지금 상태와 최근 기록은 왼쪽에서 볼 수 있어요.</p>
+              </div>
+            </div>
+            <Link className="button button-outline" to="/">현황판으로 돌아가기</Link>
+          </div>
+        )}
       </div>
     </section>
   )

@@ -114,6 +114,7 @@ async function invokePrintboardFunction<T>(name: string, body: Record<string, un
 
 export async function updatePrinterStatus(input: {
   printerId: number
+  token: string | null
   status: PrinterStatus
   userName: string | null
   endsAt: string | null
@@ -133,13 +134,17 @@ export async function updatePrinterStatus(input: {
     return
   }
 
-  const { error } = await supabase.rpc('update_printer_status', {
+  const { error } = await supabase.rpc('update_printer_status_qr', {
     p_printer_id: input.printerId,
+    p_token: input.token,
     p_status: input.status,
     p_user_name: input.userName,
     p_ends_at: input.endsAt,
     p_note: input.note,
   })
+  if (error?.message.includes('qr token required')) {
+    throw new Error('QR 정보가 맞지 않아요. 프린터 앞 QR을 다시 찍어 주세요.')
+  }
   if (error?.code === 'P0001' && error.message.includes('15초')) {
     throw new Error('상태가 최근에 변경되어 저장하지 못했습니다. 15초 뒤 다시 시도해 주세요.')
   }
@@ -218,6 +223,15 @@ export async function updateAdminRequest(input: {
     printer_id: input.printerId,
   })
   if (error) throw error
+}
+
+export async function getQrTokens(password: string): Promise<Record<number, string>> {
+  if (!supabase) return {}
+  const { data, error } = await supabase.rpc('admin_qr_tokens', { pw: password })
+  if (error) throw error
+  const result: Record<number, string> = {}
+  for (const row of (data ?? []) as { printer_id: number; token: string }[]) result[row.printer_id] = row.token
+  return result
 }
 
 export async function getRequestFileUrl(path: string, password: string): Promise<string> {
