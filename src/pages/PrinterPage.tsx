@@ -114,7 +114,7 @@ export function PrinterPage() {
   return (
     <section className="page page-printer">
       <div className="back-row"><Link to="/" className="back-link">← 상태 보드</Link><span className="route-label">DEVICE / {String(printer.id).padStart(2, '0')}</span></div>
-      <PageTitle eyebrow="QUICK STATUS UPDATE" title={printer.name} description="현장 상태를 선택하고 저장하면 보드에 바로 반영됩니다." />
+      <PageTitle eyebrow="QUICK STATUS UPDATE" title={printer.name} description={canEdit ? '현장 상태를 선택하고 저장하면 보드에 바로 반영됩니다.' : '지금 상태와 최근 변경 기록을 확인할 수 있어요.'} />
       <div className="printer-detail-layout">
         <aside className="device-panel panel">
           <div className={`device-hero device-${printer.status}`}><div className="device-glow" /><Icon name="printer" /><span>P1S</span></div>
